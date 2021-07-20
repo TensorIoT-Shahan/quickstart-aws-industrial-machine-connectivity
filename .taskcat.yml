@@ -10,7 +10,8 @@ project:
   template: templates/IMC-main.template.yaml
 
 tests:
-  ICLTestVirtual:
+  ICLTestVirtualMain:
+    template: templates/IMC-main.template.yaml
     parameters:
       ModelingVendorType: "Asset Model Converter"
       AMCDriver: "IgnitionCirrusLink"
@@ -24,29 +25,72 @@ tests:
       UserPublicIP: OVERRIDE
       VPCCIDR: 10.0.0.0/16
       VPCTenancy: default
-      UnifyUsername: OVERRIDE
-      UnifyPassword: OVERRIDE
+      UnifyUsername: test@test.com
+      UnifyPassword: test
     regions:
       - eu-central-1
   
-  ICLTestPhysical:
-    parameters:
-      ModelingVendorType: "Asset Model Converter"
-      AMCDriver: "IgnitionCirrusLink"
-      DeploymentType: "Physical"
-      EC2KeyPairName: OVERRIDE
-      EdgeDeviceID: Physical
-      GreengrassInstanceType: t3.small
-      IgnitionInstanceType: t3.large
-      PublicSubnet1CIDR: 10.0.128.0/20
-      SitewiseMonitorEmail: OVERRIDE
-      UserPublicIP: OVERRIDE
-      VPCCIDR: 10.0.0.0/16
-      VPCTenancy: default
-      UnifyUsername: OVERRIDE
-      UnifyPassword: OVERRIDE
-    regions:
-      - eu-central-1
+  # ICLTestPhysicalMain:
+  #   template: templates/IMC-main.template.yaml
+  #   parameters:
+  #     ModelingVendorType: "Asset Model Converter"
+  #     AMCDriver: "IgnitionCirrusLink"
+  #     DeploymentType: "Physical"
+  #     EC2KeyPairName: OVERRIDE
+  #     EdgeDeviceID: Physical
+  #     GreengrassInstanceType: t3.small
+  #     IgnitionInstanceType: t3.large
+  #     PublicSubnet1CIDR: 10.0.128.0/20
+  #     SitewiseMonitorEmail: OVERRIDE
+  #     UserPublicIP: OVERRIDE
+  #     VPCCIDR: 10.0.0.0/16
+  #     VPCTenancy: default
+  #     UnifyUsername: test@test.com
+  #     UnifyPassword: test
+  #   regions:
+  #     - eu-central-1
+
+  # ICLTestVirtualWorkload:
+  #   template: templates/IMC-workload.template.yaml
+  #   parameters:
+  #     ModelingVendorType: "Asset Model Converter"
+  #     AMCDriver: "IgnitionCirrusLink"
+  #     DeploymentType: "Virtual"
+  #     EC2KeyPairName: OVERRIDE
+  #     EdgeDeviceID: Virtual
+  #     VpcId: OVERRIDE
+  #     EC2Subnet: OVERRIDE
+  #     AZ: OVERRIDE
+  #     GreengrassInstanceType: t3.small
+  #     IgnitionInstanceType: t3.large
+  #     SitewiseMonitorEmail: OVERRIDE
+  #     UserPublicIP: OVERRIDE
+  #     UnifyUsername: test@test.com
+  #     UnifyPassword: test
+  #   regions:
+  #     - eu-central-1
+
+  # ICLTestPhysicalWorkload:
+  #   template: templates/IMC-workload.template.yaml
+  #   parameters:
+  #     ModelingVendorType: "Asset Model Converter"
+  #     AMCDriver: "IgnitionCirrusLink"
+  #     DeploymentType: "Physical"
+  #     EC2KeyPairName: OVERRIDE
+  #     EdgeDeviceID: Physical
+  #     VpcId: OVERRIDE
+  #     EC2Subnet: OVERRIDE
+  #     AZ: OVERRIDE
+  #     GreengrassInstanceType: t3.small
+  #     IgnitionInstanceType: t3.large
+  #     SitewiseMonitorEmail: OVERRIDE
+  #     UserPublicIP: OVERRIDE
+  #     UnifyUsername: test@test.com
+  #     UnifyPassword: test
+  #   regions:
+  #     - eu-central-1
+
+  ##################################### Element Analytics #####################################
   
   # ElementUnify:
   #   parameters:
@@ -62,9 +106,9 @@ tests:
   #     UserPublicIP: OVERRIDE
   #     VPCCIDR: 10.0.0.0/16
   #     VPCTenancy: default
-  #     UnifyUsername: OVERRIDE
-  #     UnifyPassword: OVERRIDE
+  #     UnifyUsername: test@test.com
+  #     UnifyPassword: test
   #     UnifyHostname: https://app001-aws.elementanalytics.com/
-  #     UnifyOrgId: OVERRIDE
+  #     UnifyOrgId: 123456
   #   regions:
   #     - eu-central-1
