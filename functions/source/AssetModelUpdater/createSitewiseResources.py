@@ -31,6 +31,7 @@ class CreateSitewiseResources:
         self.completionTopics = [
             'imc/control/sitewisemonitor',
             'imc/control/quicksight',
+            'imc/control/amcupdate'
         ]
 
         self.sitewiseUtils = SitewiseUtils()

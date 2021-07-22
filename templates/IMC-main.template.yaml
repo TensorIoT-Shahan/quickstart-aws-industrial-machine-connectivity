@@ -168,6 +168,9 @@ Conditions:
   UsingDefaultBucket: !Equals
     - !Ref QSS3BucketName
     - 'aws-quickstart'
+  IfVirtual: !Equals
+    - !Ref DeploymentType
+    - 'Virtual'
   IfPhysical: !Equals
     - !Ref DeploymentType
     - 'Physical'

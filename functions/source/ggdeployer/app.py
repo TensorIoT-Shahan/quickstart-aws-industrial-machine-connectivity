@@ -103,6 +103,8 @@ def deployggwithsitewise(groupname):
             sitewise_client = boto3.client('iotsitewise')
             print("printing group arn")
             print(group_arn)
+            print("Hoping to avoid the issue of needing to edit and save the gateway. Sleeping for 5 seconds...")
+            time.sleep(5)
             response = sitewise_client.create_gateway(
                 gatewayName=groupname+'_Automated_Gateway',
                 gatewayPlatform={
