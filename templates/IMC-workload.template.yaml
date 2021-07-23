@@ -405,14 +405,18 @@ Resources:
               - Effect: Allow
                 Action:
                   - quicksight:ListUsers
-                  - quicksight:CreateDatSource
+                  - quicksight:CreateDataSource
                   - quicksight:DescribeDataSource
                   - quicksight:CreateDataSet
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
+                  - !Sub "arn:${AWS::Partition}:sso:::*"
+                  - !Sub "arn:${AWS::Partition}:quicksight:*:*:*"
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${imcs3bucket}*"
 
   SiteWiseS3DumpRole:
     Type: AWS::IAM::Role
@@ -439,10 +443,15 @@ Resources:
                   - iotsitewise:ListAssetModels
                   - iotsitewise:ListAssets
                 Resource: "*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${SiteWiseResourceDataBucket}*"
   
   SiteWiseMonitorRole:
     Type: AWS::IAM::Role
@@ -475,6 +484,10 @@ Resources:
                   - iotsitewise:CreateDashboard
                   - iotsitewise:BatchAssociateProjectAssets
                 Resource: "*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
 
   KinesisProcessorRole:
     Type: AWS::IAM::Role
@@ -515,13 +528,16 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${DevicesBucketResource}*"
               - Effect: Allow
                 Action: 
                   - greengrass:GetServiceRoleForAccount
                   - greengrass:AssociateServiceRoleToAccount
                   - greengrass:DisassociateServiceRoleFromAccount
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
+                  - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:*"
               - Effect: Allow
                 Action:
                   - iam:GetRole
@@ -529,7 +545,8 @@ Resources:
                   - iam:AttachRolePolicy
                   - iam:DetachRolePolicy
                   - iam:DeleteRole
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
               - Effect: Allow
                 Action:
                   - iot:ListThingPrincipals
@@ -547,6 +564,7 @@ Resources:
                   - iot:DeletePolicy
                   - iot:DeleteThing
                 Resource: "*"
+                  # - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
 
   quicksight:
     Type: AWS::Lambda::Function
@@ -836,6 +854,12 @@ Resources:
                 - sso-directory:*
                 - iam:PassRole
               Resource: "*"
+                # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
+                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
+                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
+                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
+                # - !Sub "arn:${AWS::Partition}:sso:::*"
+                # - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
 
   DevicesBucketResource:
     Type: AWS::S3::Bucket
@@ -867,10 +891,15 @@ Resources:
                   - iot:Publish
                   - iot:Connect
                 Effect: Allow
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
               - Action: iotsitewise:BatchPutAssetPropertyValue
                 Effect: Allow
                 Resource: "*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
             Version: "2012-10-17"
           PolicyName: GGResourcePolicy
 
@@ -1189,6 +1218,12 @@ Resources:
                   - dynamodb:GetItem
                 Effect: Allow
                 Resource: "*"
+                  # - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
+                  # arn:aws:iotsitewise:eu-central-1:647309936627:asset-model/1ccf4060-17a8-4824-850e-2a7a53da205c
+                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
+                  # - !Sub "arn:${AWS::Partition}:dynamodb:*:*:*"
               - Action:
                   - s3:ListBucket
                   - s3:DeleteObject
