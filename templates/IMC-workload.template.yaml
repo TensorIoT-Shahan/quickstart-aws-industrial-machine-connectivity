@@ -438,15 +438,17 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
+              # Only "*" is valid here
               - Effect: Allow
                 Action:
                   - iotsitewise:ListAssetModels
-                  - iotsitewise:ListAssets
                 Resource: "*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
+              - Effect: Allow
+                Action:
+                  - iotsitewise:ListAssets
+                Resource: 
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset-model/*"
               - Effect: Allow
                 Action:
                   - s3:PutObject
@@ -477,17 +479,23 @@ Resources:
                 Action:
                   - iotsitewise:ListAssociatedAssets
                   - iotsitewise:DescribeAsset
-                  - iotsitewise:ListAssets
-                  - iotsitewise:CreatePortal
                   - iotsitewise:DescribePortal
                   - iotsitewise:CreateProject
                   - iotsitewise:CreateDashboard
                   - iotsitewise:BatchAssociateProjectAssets
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:project/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset-model/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:portal/*"
+              # Only "*" is valid here
+              - Effect: Allow
+                Action:
+                  - iotsitewise:CreatePortal
+                  - sso:CreateManagedApplicationInstance
+                  - sso:DescribeRegisteredRegions
+                  - iotsitewise:ListAssets
                 Resource: "*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
 
   KinesisProcessorRole:
     Type: AWS::IAM::Role
@@ -529,15 +537,19 @@ Resources:
                 Action:
                   - s3:PutObject
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:s3:::${DevicesBucketResource}*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${DevicesBucketResource}/*"
+              # Only "*" is valid here
               - Effect: Allow
                 Action: 
                   - greengrass:GetServiceRoleForAccount
                   - greengrass:AssociateServiceRoleToAccount
                   - greengrass:DisassociateServiceRoleFromAccount
-                Resource:
-                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
-                  - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:*"
+                  - iot:AttachThingPrincipal # "*" required
+                  - iot:DescribeEndpoint # "*" required
+                  - iot:CreateKeysAndCertificate # "*" required
+                  - iot:ListThingPrincipals # "*" required
+                  - iot:DetachThingPrincipal # "*" required
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - iam:GetRole
@@ -546,25 +558,25 @@ Resources:
                   - iam:DetachRolePolicy
                   - iam:DeleteRole
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*"
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*"
               - Effect: Allow
                 Action:
-                  - iot:ListThingPrincipals
                   - iot:CreateThing
-                  - iot:CreateKeysAndCertificate
                   - iot:CreatePolicy
                   - iot:AttachPolicy
-                  - iot:AttachThingPrincipal
-                  - iot:DescribeEndpoint
-                  - iot:DescribeThing
-                  - iot:DetachThingPrincipal
+                  - iot:DescribeThing 
                   - iot:DetachPolicy
                   - iot:UpdateCertificate
                   - iot:DeleteCertificate
                   - iot:DeletePolicy
                   - iot:DeleteThing
-                Resource: "*"
-                  # - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thing/*"
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thinggroup/*"
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:cert/*"
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:billinggroup/*"
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:policy/*"
 
   quicksight:
     Type: AWS::Lambda::Function
@@ -585,10 +597,6 @@ Resources:
         Variables:
           imcdatabucket:
             Ref: imcs3bucket
-          imcmonitorrole:
-            Fn::GetAtt:
-              - SwMonitorRole
-              - Arn
           imcawsaccount:
             Ref: AWS::AccountId
           stackName: 
@@ -842,18 +850,20 @@ Resources:
                 - monitor.iotsitewise.amazonaws.com
             Action:
               - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSIoTSiteWiseMonitorPortalAccess"
       Path: /
-      Policies:
-        - PolicyName: imc_iot_role_policy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              Effect: Allow
-              Action:
-                - iotsitewise:*
-                - sso-directory:*
-                - iam:PassRole
-              Resource: "*"
+      # Policies:
+      #   - PolicyName: imc_iot_role_policy
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         Effect: Allow
+      #         Action:
+      #           - iotsitewise:*
+      #           - sso-directory:*
+      #           - iam:PassRole
+      #         Resource: "*"
                 # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
                 # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
                 # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
@@ -893,13 +903,11 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
-              - Action: iotsitewise:BatchPutAssetPropertyValue
+              - Action: 
+                  - iotsitewise:BatchPutAssetPropertyValue
                 Effect: Allow
-                Resource: "*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
             Version: "2012-10-17"
           PolicyName: GGResourcePolicy
 
@@ -1195,20 +1203,13 @@ Resources:
                     - Arn
               - Action:
                   - iot:Publish
-                  - iotsitewise:DescribeAssetModel
-                  - iotsitewise:CreateAssetModel
-                  - iotsitewise:ListAssetModels
-                  - iotsitewise:UpdateAssetModel
-                  - iotsitewise:DeleteAssetModel
                   - iotsitewise:CreateAsset
                   - iotsitewise:DescribeAsset
                   - iotsitewise:UpdateAssetProperty
-                  - iotsitewise:ListAssets
                   - iotsitewise:ListAssociatedAssets
                   - iotsitewise:DeleteAsset
                   - iotsitewise:DisassociateAssets
                   - iotsitewise:AssociateAssets
-                  - iotsitewise:ListGateways
                   - iotsitewise:DescribeGateway
                   - iotsitewise:DescribeGatewayCapabilityConfiguration
                   - iotsitewise:UpdateGatewayCapabilityConfiguration
@@ -1217,13 +1218,23 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:GetItem
                 Effect: Allow
-                Resource: "*"
-                  # - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
-                  # arn:aws:iotsitewise:eu-central-1:647309936627:asset-model/1ccf4060-17a8-4824-850e-2a7a53da205c
-                  # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
-                  # - !Sub "arn:${AWS::Partition}:dynamodb:*:*:*"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset-model/*"
+                  - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:gateway/*"
+                  - !Sub "arn:${AWS::Partition}:dynamodb:*:${AWS::AccountId}:table/*"
+              # Only "*" is valid here.
+              - Effect: Allow
+                Action:
+                  - iotsitewise:DescribeAssetModel
+                  - iotsitewise:CreateAssetModel
+                  - iotsitewise:ListAssetModels
+                  - iotsitewise:UpdateAssetModel
+                  - iotsitewise:DeleteAssetModel
+                  - iotsitewise:ListGateways
+                  - iotsitewise:ListAssets
+                Resource: "*" 
               - Action:
                   - s3:ListBucket
                   - s3:DeleteObject
