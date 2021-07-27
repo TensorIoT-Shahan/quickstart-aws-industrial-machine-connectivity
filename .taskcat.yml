@@ -14,9 +14,11 @@ tests:
   ICLTestVirtualMain:
     template: templates/IMC-main.template.yaml
     parameters:
-      DeploymentType: "Virtual"
+      ModelingVendorType: "Asset Model Converter"
+      AMCDriver: "IgnitionCirrusLink"
+      DeploymentType: "Physical"
       EC2KeyPairName: OVERRIDE
-      EdgeDeviceID: tcatvirtual
+      EdgeDeviceID: Physical
       GreengrassInstanceType: t3.small
       IgnitionInstanceType: t3.large
       PublicSubnet1CIDR: 10.0.128.0/20
