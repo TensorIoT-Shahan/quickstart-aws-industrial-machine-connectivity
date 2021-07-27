@@ -889,7 +889,8 @@ Resources:
                 - firehose:ListDeliveryStreams
                 - firehose:PutRecord
                 - firehose:PutRecordBatch
-              Resource: '*'
+              Resource:
+                - !Sub "arn:${AWS::Partition}:firehose:*:${AWS::AccountId}:deliverystream/*"
 
   SwMonitorRole:
     Type: AWS::IAM::Role
