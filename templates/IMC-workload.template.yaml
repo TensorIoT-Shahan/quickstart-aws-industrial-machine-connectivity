@@ -376,7 +376,7 @@ Resources:
           - !Ref AMCIncomingResource
           - !Ref AMCOutputResource
           - !Ref SiteWiseResourceDataBucket
-          - !Ref imcs3bucket
+          - !Ref IMCS3Bucket
           - !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
         EdgeDeviceIDs: !Join
         - ','
@@ -416,7 +416,7 @@ Resources:
                 Action:
                   - s3:PutObject
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:s3:::${imcs3bucket}*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${IMCS3Bucket}*"
 
   SiteWiseS3DumpRole:
     Type: AWS::IAM::Role
@@ -483,6 +483,7 @@ Resources:
                   - iotsitewise:CreateProject
                   - iotsitewise:CreateDashboard
                   - iotsitewise:BatchAssociateProjectAssets
+                  - iotsitewise:ListAssets
                 Resource:
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:project/*"
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
@@ -494,7 +495,6 @@ Resources:
                   - iotsitewise:CreatePortal
                   - sso:CreateManagedApplicationInstance
                   - sso:DescribeRegisteredRegions
-                  - iotsitewise:ListAssets
                 Resource: "*"
 
   KinesisProcessorRole:
@@ -515,6 +515,13 @@ Resources:
 
   GreengrassLambdaRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Need to invoke codepipeline stages; create CFN stacks"
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -578,7 +585,7 @@ Resources:
                   - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:billinggroup/*"
                   - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:policy/*"
 
-  quicksight:
+  QuickSight:
     Type: AWS::Lambda::Function
     Properties:
       ReservedConcurrentExecutions: 1
@@ -596,7 +603,7 @@ Resources:
       Environment:
         Variables:
           imcdatabucket:
-            Ref: imcs3bucket
+            Ref: IMCS3Bucket
           imcawsaccount:
             Ref: AWS::AccountId
           stackName: 
@@ -628,7 +635,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  quicksightiotruletrigger:
+  QuickSightIoTRuleTrigger:
     Type: AWS::IoT::TopicRule
     DependsOn: CopyZipsStack
     Properties:
@@ -639,9 +646,9 @@ Resources:
           - Lambda:
               FunctionArn:
                 Fn::GetAtt:
-                  - quicksight
+                  - QuickSight
                   - Arn
-  quicksightFunctionInvocationPermission:
+  QuicksightFunctionInvocationPermission:
     Type: AWS::Lambda::Permission
     DependsOn: CopyZipsStack
     Properties:
@@ -653,17 +660,17 @@ Resources:
             - ":"
             - Ref: AWS::AccountId
             - :rule/
-            - Ref: quicksightiotruletrigger
+            - Ref: QuickSightIoTRuleTrigger
       Action: lambda:InvokeFunction
       Principal: iot.amazonaws.com
       FunctionName:
         Fn::GetAtt:
-          - quicksight
+          - QuickSight
           - Arn
       SourceAccount:
         Ref: AWS::AccountId
 
-  sitewisemonitor:
+  SiteWiseMonitor:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.8
@@ -682,7 +689,7 @@ Resources:
           supportEmail:
             Ref: SitewiseMonitorEmail
           imcdatabucket:
-            Ref: imcs3bucket
+            Ref: IMCS3Bucket
           imcmonitorrole:
             Fn::GetAtt:
               - SwMonitorRole
@@ -692,7 +699,7 @@ Resources:
           stackName:
             Ref: AWS::StackName
           
-  sitewisemonitoriotruletrigger:
+  SiteWiseMonitorIoTRuleTrigger:
     Type: AWS::IoT::TopicRule
     DependsOn: CopyZipsStack
     Properties:
@@ -703,9 +710,9 @@ Resources:
           - Lambda:
               FunctionArn:
                 Fn::GetAtt:
-                  - sitewisemonitor
+                  - SiteWiseMonitor
                   - Arn
-  sitewisemonitorFunctionInvocationPermission:
+  SiteWiseMonitorFunctionInvocationPermission:
     Type: AWS::Lambda::Permission
     DependsOn: CopyZipsStack
     Properties:
@@ -717,17 +724,17 @@ Resources:
             - ":"
             - Ref: AWS::AccountId
             - :rule/
-            - Ref: sitewisemonitoriotruletrigger
+            - Ref: SiteWiseMonitorIoTRuleTrigger
       Action: lambda:InvokeFunction
       Principal: iot.amazonaws.com
       FunctionName:
         Fn::GetAtt:
-          - sitewisemonitor
+          - SiteWiseMonitor
           - Arn
       SourceAccount:
         Ref: AWS::AccountId
 
-  processLambda:
+  ProcessLambda:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: nodejs12.x
@@ -749,7 +756,7 @@ Resources:
         BucketARN: !Join 
           - ''
           - - 'arn:aws:s3:::'
-            - !Ref imcs3bucket
+            - !Ref IMCS3Bucket
         BufferingHints:
           IntervalInSeconds: 60
           SizeInMBs: 50
@@ -760,11 +767,11 @@ Resources:
           Processors:
             - Parameters:
                 - ParameterName: LambdaArn
-                  ParameterValue: !GetAtt processLambda.Arn 
+                  ParameterValue: !GetAtt ProcessLambda.Arn 
               Type: Lambda
         RoleARN: !GetAtt KinesisRole.Arn
 
-  imcs3bucket:
+  IMCS3Bucket:
     Type: AWS::S3::Bucket
     DependsOn: CopyZipsStack
 
@@ -815,14 +822,14 @@ Resources:
                 - - 'arn:'
                   - !Sub ${AWS::Partition}
                   - ':s3:::'
-                  - !Ref imcs3bucket
+                  - !Ref IMCS3Bucket
                   - '/*'
               - !Join 
                 - ''
                 - - 'arn:'
                   - !Sub ${AWS::Partition}
                   - ':s3:::'
-                  - !Ref imcs3bucket
+                  - !Ref IMCS3Bucket
                   - '/'
           - Effect: Allow
             Action:
@@ -1268,6 +1275,10 @@ Resources:
                   - iotsitewise:DescribeGateway
                   - iotsitewise:DescribeGatewayCapabilityConfiguration
                   - iotsitewise:UpdateGatewayCapabilityConfiguration
+                  - iotsitewise:DescribeAssetModel
+                  - iotsitewise:UpdateAssetModel
+                  - iotsitewise:DeleteAssetModel
+                  - iotsitewise:ListAssets
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                   - dynamodb:Query
@@ -1282,13 +1293,9 @@ Resources:
               # Only "*" is valid here.
               - Effect: Allow
                 Action:
-                  - iotsitewise:DescribeAssetModel
                   - iotsitewise:CreateAssetModel
                   - iotsitewise:ListAssetModels
-                  - iotsitewise:UpdateAssetModel
-                  - iotsitewise:DeleteAssetModel
                   - iotsitewise:ListGateways
-                  - iotsitewise:ListAssets
                 Resource: "*" 
               - Action:
                   - s3:ListBucket
@@ -1539,6 +1546,13 @@ Resources:
 
   ApiHandlerRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Need to invoke codepipeline stages; create CFN stacks"
     DependsOn: CopyZipsStack
     Properties:
       AssumeRolePolicyDocument:
@@ -1549,13 +1563,69 @@ Resources:
           Principal:
             Service: lambda.amazonaws.com
           Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
       - PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Effect: Allow
-            Action: '*'
-            Resource: '*'
+            - Effect: Allow
+              Action:
+                - greengrass:ListGroups
+                - iotsitewise:CreateGateway
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - greengrass:CreateDeployment
+                - greengrass:ListGroupCertificateAuthority
+                - greengrass:ListGroupCertificateAuthorities
+                - greengrass:GetGroupCertificateAuthority
+                - greengrass:UpdateConnectivityInfo
+                - greengrass:GetGroupVersion
+                - greengrass:GetCoreDefinitionVersion
+                - greengrass:GetConnectorDefinition
+                - greengrass:GetConnectorDefinitionVersion
+                - greengrass:GetCoreDefinition
+                - greengrass:GetCoreDefinitionVersion
+                - greengrass:GetDeviceDefinition
+                - greengrass:getDeviceDefinitionVersion
+                - greengrass:GetDeploymentStatus
+                - greengrass:GetFunctionDefinition
+                - greengrass:GetFunctionDefinitionVersion
+                - greengrass:GetGroup
+                - greengrass:GetGroupVersion
+                - greengrass:GetLoggerDefinition
+                - greengrass:getLoggerDefinitionVersion
+                - greengrass:GetResourceDefinition
+                - greengrass:GetResourceDefinitionVersion
+                - greengrass:GetSubscriptionDefinition
+                - greengrass:GetSubscriptionDefinitionVersion
+              Resource:
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/groups/*"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/groups/*/certificateauthorities/*"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/things/*/connectivityInfo"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/*"
+                - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thing/*"
+            - Effect: Allow
+              Action:
+                - iotsitewise:UpdateGatewayCapabilityConfiguration
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:gateway/*"
+            - Effect: Allow
+              Action: 
+                - iot:ListNamedShadowsForThing
+                - iot:GetThingShadow
+                - iot:UpdateThingShadow
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thing/*"
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/iotsitewise.amazonaws.com/AWSServiceRoleForIoTSiteWise"
+          # - Effect: Allow
+          #   Action: '*'
+          #   Resource: '*'
         PolicyName: ApiHandlerRolePolicy
   RestAPI:
     Type: AWS::Serverless::Api
@@ -1815,7 +1885,7 @@ Resources:
         EdgeSecGroupResourceGroupID: !GetAtt EdgeSecurityGroupResource.GroupId
         DeviceBucketRes: !Ref DevicesBucketResource
         LambdaZipsBucket: !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
-        IMCBucketArn: !GetAtt imcs3bucket.Arn 
+        IMCBucketArn: !GetAtt IMCS3Bucket.Arn 
         KinesisDelRoleArn: !GetAtt KinesisRole.Arn
         IoTTopicRuleRoleArn: !GetAtt IoTRuleRole.Arn
         AMCIncomingRes: !Ref AMCIncomingResource
@@ -1847,7 +1917,7 @@ Resources:
         EdgeDeviceID: !Ref EdgeDeviceID
         DeviceBucketRes: !Ref DevicesBucketResource
         LambdaZipsBucket: !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
-        IMCBucketArn: !GetAtt imcs3bucket.Arn 
+        IMCBucketArn: !GetAtt IMCS3Bucket.Arn 
         KinesisDelRoleArn: !GetAtt KinesisRole.Arn
         IoTTopicRuleRoleArn: !GetAtt IoTRuleRole.Arn
         AMCIncomingRes: !Ref AMCIncomingResource
