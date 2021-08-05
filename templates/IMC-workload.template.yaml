@@ -246,7 +246,7 @@ Resources:
     Properties:
       FunctionName: !Sub '${AWS::StackName}-IoTEndpoint'
       Handler: index.handler
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Role: !GetAtt 'IoTEndpointRole.Arn'
       Code:
         ZipFile: | 
@@ -330,7 +330,7 @@ Resources:
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: lambda-endpoint
+        - PolicyName: !Sub "${AWS::StackName}-lambda-endpoint"
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -398,7 +398,7 @@ Resources:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
-        - PolicyName: quicksightlambdapolicy
+        - PolicyName: !Sub "${AWS::StackName}-quicksightlambdapolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -434,7 +434,7 @@ Resources:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
-        - PolicyName: sitewisetos3dumppolicy
+        - PolicyName: !Sub "${AWS::StackName}-sitewisetos3dumppolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -471,7 +471,7 @@ Resources:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
-        - PolicyName: sitewisemonitorpolicy
+        - PolicyName: !Sub "${AWS::StackName}-sitewisemonitorpolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -529,7 +529,7 @@ Resources:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
-        - PolicyName: gglambdarole
+        - PolicyName: !Sub "${AWS::StackName}-gglambdarole"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -788,7 +788,7 @@ Resources:
     Type: AWS::IAM::Policy
     DependsOn: CopyZipsStack
     Properties:
-      PolicyName: imc_firehose_delivery_policy
+      PolicyName: !Sub "${AWS::StackName}-firehose_delivery"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -825,7 +825,7 @@ Resources:
               - sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: imc_iot_role_policy
+        - PolicyName: !Sub "${AWS::StackName}-iot_role"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -909,7 +909,7 @@ Resources:
                 Resource:
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
             Version: "2012-10-17"
-          PolicyName: GGResourcePolicy
+          PolicyName: !Sub "${AWS::StackName}-GGResourcePolicy"
 
   GreengrassLambdaResource:
     Type: AWS::Lambda::Function
@@ -1261,7 +1261,7 @@ Resources:
                             - Arn
                         - "*"
             Version: "2012-10-17"
-          PolicyName: AMCLambdaPolicy
+          PolicyName: !Sub "${AWS::StackName}-AMCLambdaPolicy"
 
   StatusTable:
     Type: 'AWS::DynamoDB::Table'
@@ -1502,7 +1502,7 @@ Resources:
           - Effect: Allow
             Action: '*'
             Resource: '*'
-        PolicyName: ApiHandlerRolePolicy
+        PolicyName: !Sub "${AWS::StackName}-ApiHandlerRolePolicy"
   RestAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -1687,7 +1687,7 @@ Resources:
                 Resource: 
                   - !Sub 'arn:aws:s3:::${DevicesBucketResource}*'
             Version: "2012-10-17"
-          PolicyName: Ec2S3Access
+          PolicyName: !Sub "${AWS::StackName}-Ec2S3Access"
   EdgeSecurityGroupResource:
     Type: AWS::EC2::SecurityGroup
     DependsOn: CopyZipsStack

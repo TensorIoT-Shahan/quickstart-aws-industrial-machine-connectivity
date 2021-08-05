@@ -36,12 +36,16 @@ class ManageGreengrass:
         """
         responseData = {}
 
-        if event['RequestType'] == 'Create':
-            # The only thing we do on creation is setup the greengrass service role, if needed.
-            self.setupGreengrassServiceRole()
-        elif event['RequestType'] == 'Delete':
-            # self.resetGroupDeployments()
-            self.removeGreengrassServiceRole()
+        try:
+            if event['RequestType'] == 'Create':
+                # The only thing we do on creation is setup the greengrass service role, if needed.
+                self.setupGreengrassServiceRole()
+            elif event['RequestType'] == 'Delete':
+                # self.resetGroupDeployments()
+                self.removeGreengrassServiceRole()
+        except Exception as e:
+            log.exception(f"Something went wrong: {e}")
+            print(f"Something went wrong: {e}")
 
         return responseData
 

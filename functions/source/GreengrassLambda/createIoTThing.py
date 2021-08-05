@@ -177,11 +177,11 @@ class CreateIoTThing:
             certPem = response['certificatePem']
             privateKey = response['keyPair']['PrivateKey']
             client.create_policy(
-                policyName='{}-full-access'.format(self.thingName),
+                policyName='{}-full-access-{}'.format(self.stackName, self.thingName),
                 policyDocument=json.dumps(self.getPolicyDocument())
             )
             response = client.attach_policy(
-                policyName='{}-full-access'.format(self.thingName),
+                policyName='{}-full-access-{}'.format(self.stackName, self.thingName),
                 target=certArn
             )
             response = client.attach_thing_principal(
@@ -189,7 +189,7 @@ class CreateIoTThing:
                 principal=certArn,
             )
             logger.info('Created thing: %s, cert: %s and policy: %s' %
-                        (self.thingName, certId, '{}-full-access'.format(self.thingName)))
+                        (self.thingName, certId, '{}-full-access-{}'.format(self.stackName, self.thingName)))
             responseData['certificateId'] = certId
             responseData['certificateArn'] = certArn
             responseData['certificatePem'] = certPem
@@ -232,7 +232,7 @@ class CreateIoTThing:
 
                     if pType == 'cert':
                         response = client.detach_policy(
-                            policyName='{}-full-access'.format(self.thingName),
+                            policyName='{}-full-access-{}'.format(self.stackName, self.thingName),
                             target=pRef
                         )
                         response = client.update_certificate(
@@ -244,7 +244,7 @@ class CreateIoTThing:
                             forceDelete=True
                         )
                         response = client.delete_policy(
-                            policyName='{}-full-access'.format(self.thingName),
+                            policyName='{}-full-access-{}'.format(self.stackName, self.thingName),
                         )
                         response = client.delete_thing(
                             thingName=self.thingName
