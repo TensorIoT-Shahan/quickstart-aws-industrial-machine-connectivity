@@ -420,6 +420,13 @@ Resources:
 
   SiteWiseS3DumpRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Can't narrow policies for the actions."
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -457,6 +464,13 @@ Resources:
   
   SiteWiseMonitorRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Can't narrow policies for the actions."
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -515,6 +529,13 @@ Resources:
 
   GreengrassLambdaRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Can't narrow policies for the actions."
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -812,6 +833,13 @@ Resources:
 
   IoTRuleRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Can't narrow policies for the actions."
     DependsOn: CopyZipsStack
     Properties:
       AssumeRolePolicyDocument:
@@ -896,7 +924,7 @@ Resources:
                   - logs:PutLogEvents
                   - logs:DescribeLogStreams
                 Effect: Allow
-                Resource: arn:aws:logs:*:*:*
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
               - Action: 
                   - iot:Publish
                   - iot:Connect
@@ -1176,6 +1204,13 @@ Resources:
 
   AMCLambdaRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Can't narrow policies for the actions."
     DependsOn: CopyZipsStack
     Properties:
       AssumeRolePolicyDocument:
@@ -1193,7 +1228,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Effect: Allow
-                Resource: arn:aws:logs:*:*:*
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
               - Action:
                   - lambda:InvokeFunction
                 Effect: Allow
@@ -1685,7 +1720,7 @@ Resources:
               - Action: s3:GetObject
                 Effect: Allow
                 Resource: 
-                  - !Sub 'arn:aws:s3:::${DevicesBucketResource}*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${DevicesBucketResource}*'
             Version: "2012-10-17"
           PolicyName: !Sub "${AWS::StackName}-Ec2S3Access"
   EdgeSecurityGroupResource:
