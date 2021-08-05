@@ -8,10 +8,10 @@ project:
     QSS3BucketName: $[taskcat_autobucket] # will need to follow 'virtual deployment' instructions in user guide 
     QSS3KeyPrefix: quickstart-aws-industrial-machine-connectivity/ # will need to follow 'virtual deployment' instructions in user guide 
     QSS3BucketRegion: $[taskcat_current_region]
-  # s3_bucket: tcat-quickstart-awsmv450lzj
+  s3_bucket: tcat-quickstart-awsmv450lzj
 
 tests:
-  ICLTestVirtualMain:
+  VirtMain:
     template: templates/IMC-main.template.yaml
     parameters:
       DeploymentType: "Virtual"
@@ -29,7 +29,7 @@ tests:
     regions:
       - eu-central-1
   
-  # ICLTestPhysicalMain:
+  # PhysMain:
   #   template: templates/IMC-main.template.yaml
   #   parameters:
   #     ModelingVendorType: "Asset Model Converter"
@@ -49,7 +49,7 @@ tests:
   #   regions:
   #     - eu-central-1
 
-  # ICLTestVirtualWorkload:
+  # VirtWork:
   #   template: templates/IMC-workload.template.yaml
   #   parameters:
   #     ModelingVendorType: "Asset Model Converter"
@@ -69,7 +69,7 @@ tests:
   #   regions:
   #     - eu-central-1
 
-  # ICLTestPhysicalWorkload:
+  # PhysWork:
   #   template: templates/IMC-workload.template.yaml
   #   parameters:
   #     ModelingVendorType: "Asset Model Converter"
