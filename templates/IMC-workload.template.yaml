@@ -376,7 +376,7 @@ Resources:
           - !Ref AMCIncomingResource
           - !Ref AMCOutputResource
           - !Ref SiteWiseResourceDataBucket
-          - !Ref imcs3bucket
+          - !Ref IMCS3Bucket
           - !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
         EdgeDeviceIDs: !Join
         - ','
@@ -416,7 +416,7 @@ Resources:
                 Action:
                   - s3:PutObject
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:s3:::${imcs3bucket}*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${IMCS3Bucket}*"
 
   SiteWiseS3DumpRole:
     Type: AWS::IAM::Role
@@ -573,6 +573,7 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action:
+                  - iam:PassRole
                   - iam:GetRole
                   - iam:CreateRole
                   - iam:AttachRolePolicy
@@ -617,7 +618,7 @@ Resources:
       Environment:
         Variables:
           imcdatabucket:
-            Ref: imcs3bucket
+            Ref: IMCS3Bucket
           imcawsaccount:
             Ref: AWS::AccountId
           stackName: 
@@ -703,7 +704,7 @@ Resources:
           supportEmail:
             Ref: SitewiseMonitorEmail
           imcdatabucket:
-            Ref: imcs3bucket
+            Ref: IMCS3Bucket
           imcmonitorrole:
             Fn::GetAtt:
               - SwMonitorRole
@@ -770,7 +771,7 @@ Resources:
         BucketARN: !Join 
           - ''
           - - 'arn:aws:s3:::'
-            - !Ref imcs3bucket
+            - !Ref IMCS3Bucket
         BufferingHints:
           IntervalInSeconds: 60
           SizeInMBs: 50
@@ -785,7 +786,7 @@ Resources:
               Type: Lambda
         RoleARN: !GetAtt KinesisRole.Arn
 
-  imcs3bucket:
+  IMCS3Bucket:
     Type: AWS::S3::Bucket
     DependsOn: CopyZipsStack
 
@@ -814,8 +815,62 @@ Resources:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Action: '*'
-            Resource: '*'
+            Action:
+              - glue:GetTable
+              - glue:GetTableVersion
+              - glue:GetTableVersion
+            Resource:
+              - !Sub "arn:${AWS::Partition}:glue:*:${AWS::AccountId}:catalog"
+              - !Sub "arn:${AWS::Partition}:glue:*:${AWS::AccountId}:database/*"
+              - !Sub "arn:${AWS::Partition}:glue:*:${AWS::AccountId}:table/*"
+          - Effect: Allow
+            Action:
+              - s3:AbortMultipartUpload
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:PutObject
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:'
+                  - !Sub ${AWS::Partition}
+                  - ':s3:::'
+                  - !Ref IMCS3Bucket
+                  - '/*'
+              - !Join 
+                - ''
+                - - 'arn:'
+                  - !Sub ${AWS::Partition}
+                  - ':s3:::'
+                  - !Ref IMCS3Bucket
+                  - '/'
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunctionConfiguration
+            Resource:
+              - !Sub "arn:${AWS::Partition}:lambda:*:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource:
+              - !Sub "arn:${AWS::Partition}:kms:*:${AWS::AccountId}:key/*"
+          - Effect: Allow
+            Action: 
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:*"
+          - Effect: Allow
+            Action:
+              - kinesis:DescribeStream
+              - kinesis:GetShardIterator
+              - kinesis:GetRecords
+              - kinesis:ListShards
+            Resource:
+              - !Sub "arn:${AWS::Partition}:kinesis:*:${AWS::AccountId}:stream/*"
       Roles:
         - !Ref KinesisRole
 
@@ -1517,9 +1572,15 @@ Resources:
           - AssetModelUpdaterRule
           - Arn
 
-
   ApiHandlerRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "Need to invoke codepipeline stages; create CFN stacks"
     DependsOn: CopyZipsStack
     Properties:
       AssumeRolePolicyDocument:
@@ -1530,13 +1591,66 @@ Resources:
           Principal:
             Service: lambda.amazonaws.com
           Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
       - PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Effect: Allow
-            Action: '*'
-            Resource: '*'
+            - Effect: Allow
+              Action:
+                - greengrass:ListGroups
+                - iotsitewise:CreateGateway
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - greengrass:CreateDeployment
+                - greengrass:ListGroupCertificateAuthority
+                - greengrass:ListGroupCertificateAuthorities
+                - greengrass:GetGroupCertificateAuthority
+                - greengrass:UpdateConnectivityInfo
+                - greengrass:GetGroupVersion
+                - greengrass:GetCoreDefinitionVersion
+                - greengrass:GetConnectorDefinition
+                - greengrass:GetConnectorDefinitionVersion
+                - greengrass:GetCoreDefinition
+                - greengrass:GetCoreDefinitionVersion
+                - greengrass:GetDeviceDefinition
+                - greengrass:getDeviceDefinitionVersion
+                - greengrass:GetDeploymentStatus
+                - greengrass:GetFunctionDefinition
+                - greengrass:GetFunctionDefinitionVersion
+                - greengrass:GetGroup
+                - greengrass:GetGroupVersion
+                - greengrass:GetLoggerDefinition
+                - greengrass:getLoggerDefinitionVersion
+                - greengrass:GetResourceDefinition
+                - greengrass:GetResourceDefinitionVersion
+                - greengrass:GetSubscriptionDefinition
+                - greengrass:GetSubscriptionDefinitionVersion
+              Resource:
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/groups/*"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/groups/*/certificateauthorities/*"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/things/*/connectivityInfo"
+                - !Sub "arn:${AWS::Partition}:greengrass:*:${AWS::AccountId}:/greengrass/*"
+                - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thing/*"
+            - Effect: Allow
+              Action:
+                - iotsitewise:UpdateGatewayCapabilityConfiguration
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:gateway/*"
+            - Effect: Allow
+              Action: 
+                - iot:ListNamedShadowsForThing
+                - iot:GetThingShadow
+                - iot:UpdateThingShadow
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iot:*:${AWS::AccountId}:thing/*"
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource:
+                - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/iotsitewise.amazonaws.com/AWSServiceRoleForIoTSiteWise"
         PolicyName: !Sub "${AWS::StackName}-ApiHandlerRolePolicy"
   RestAPI:
     Type: AWS::Serverless::Api
@@ -1797,7 +1911,7 @@ Resources:
         EdgeSecGroupResourceGroupID: !GetAtt EdgeSecurityGroupResource.GroupId
         DeviceBucketRes: !Ref DevicesBucketResource
         LambdaZipsBucket: !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
-        IMCBucketArn: !GetAtt imcs3bucket.Arn 
+        IMCBucketArn: !GetAtt IMCS3Bucket.Arn 
         KinesisDelRoleArn: !GetAtt KinesisRole.Arn
         IoTTopicRuleRoleArn: !GetAtt IoTRuleRole.Arn
         AMCIncomingRes: !Ref AMCIncomingResource
@@ -1829,7 +1943,7 @@ Resources:
         EdgeDeviceID: !Ref EdgeDeviceID
         DeviceBucketRes: !Ref DevicesBucketResource
         LambdaZipsBucket: !GetAtt CopyZipsStack.Outputs.LambdaZipsBucketRef
-        IMCBucketArn: !GetAtt imcs3bucket.Arn 
+        IMCBucketArn: !GetAtt IMCS3Bucket.Arn 
         KinesisDelRoleArn: !GetAtt KinesisRole.Arn
         IoTTopicRuleRoleArn: !GetAtt IoTRuleRole.Arn
         AMCIncomingRes: !Ref AMCIncomingResource
