@@ -281,7 +281,6 @@ Resources:
       SubnetId: !Ref 'EC2Subnet'
       Tags:
         - Key: Name
-          # Value: !Sub '${DeploymentType}/${DeploymentOption}/Greengrass' 
           Value: !Sub '${DeploymentType}/Option1/Greengrass' 
       UserData:
         Fn::Base64:
@@ -344,7 +343,6 @@ Resources:
       SubnetId: !Ref EC2Subnet
       Tags:
         - Key: Name
-          # Value: !Sub '${DeploymentType}/${DeploymentOption}/Ignition'
           Value: !Sub '${DeploymentType}/Option1/Ignition'
       UserData:
         Fn::Base64: !Join 

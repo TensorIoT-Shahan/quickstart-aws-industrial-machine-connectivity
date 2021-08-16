@@ -219,8 +219,11 @@ image::../images/Ignition-MQTT-Filtered-Properties.png[Ignition MQTT filtered pr
 
 If these settings are as shown in <<ignition-mqtt-filtered>> and you're still receiving errors, check the Lambda function responsible for creating the models and assets in AWS IoT SiteWise for errors:
 
-. Open the AWS Lambda console, and navigate to the function with this name (replacing the information in brackets):
-    `<name_of_stack>-AssetModelIngestionLambdaResource-<hash>`
+. Navigate to DynamoDB and check the table called: "[stack_name]-status-table".
+. Here, will be an entry for each AMC Lambda function which has either run and finished or run and failed.
+. For any failed AMC Lambda functions, navigate to CloudWatch and go to "Dashboards". There is a CloudWatch Dashboard for each AMC Lambda function which will log any "error" level messages.
+. For more detailed logs, open the AWS Lambda console, and navigate to the function which failed (replacing the information in brackets):
+    `<name_of_stack>-<name_of_failed_function>-<hash>`
 . Choose the *Monitoring* tab.
 . Choose *View logs in CloudWatch*.
 . Click into the most recent log stream, and find the error message to troubleshoot.

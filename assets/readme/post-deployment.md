@@ -135,12 +135,15 @@ Validate data flow into S3:
 ### View SiteWise Portal Data 
 
 >SSO must be enabled in the region your launched in the CloudFormation stack in and you must have a user created in that region in order to access the SiteWise Monitor dashboards in the following sections.
+>Steps 3-4 remediate an IAM-role related issue that is currently being investigated.
 
 1. Log in to SiteWise Monitor Portal
     1. Navigate to the SiteWise console, select the icon on the left and select "Monitor" -> "Portals". 
     2. Select the hyperlinked "name" of the Portal most recently added (the topmost on the list). 
-    3. Add yourself as an administrator of the Portal by clicking “Assign Users” in the Portal Administrators section
-    4. Once you are listed as a Portal Administrator, click the hyperlinked URL in the Portal details section under the “URL” column. This URL should have the format: 
+    3. Under "Portal details", click "Edit".
+    4. Navigate down to "Permissions", select "Create and use a new service role". Press "Save".
+    5. Add yourself as an administrator of the Portal by clicking “Assign Users” in the Portal Administrators section
+    6. Once you are listed as a Portal Administrator, click the hyperlinked URL in the Portal details section under the “URL” column. This URL should have the format: 
 
         `https://[XXXXX....XXXXXX].app.iotsitewise.aws.`
 

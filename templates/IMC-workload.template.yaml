@@ -497,11 +497,13 @@ Resources:
                   - iotsitewise:CreateProject
                   - iotsitewise:CreateDashboard
                   - iotsitewise:BatchAssociateProjectAssets
+                  - iam:PassRole
                 Resource:
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:project/*"
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset/*"
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:asset-model/*"
                   - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:portal/*"
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*"
               # Only "*" is valid here
               - Effect: Allow
                 Action:
@@ -935,25 +937,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSIoTSiteWiseMonitorPortalAccess"
-      Path: /
-      # Policies:
-      #   - PolicyName: imc_iot_role_policy
-      #     PolicyDocument:
-      #       Version: "2012-10-17"
-      #       Statement:
-      #         Effect: Allow
-      #         Action:
-      #           - iotsitewise:*
-      #           - sso-directory:*
-      #           - iam:PassRole
-      #         Resource: "*"
-                # - !Sub "arn:${AWS::Partition}:iotsitewise:*:${AWS::AccountId}:*"
-                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:*/*"
-                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset/*"
-                # - !Sub "arn:${AWS::Partition}:iotsitewise:${AWS::Region}:${AWS::AccountId}:asset-model/*"
-                # - !Sub "arn:${AWS::Partition}:sso:::*"
-                # - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:*"
-
+              
   DevicesBucketResource:
     Type: AWS::S3::Bucket
     UpdateReplacePolicy: Delete
